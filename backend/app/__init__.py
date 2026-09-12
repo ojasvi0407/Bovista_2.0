@@ -1,0 +1,1 @@
+"""Livestock Health backend application."""

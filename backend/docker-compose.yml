@@ -1,0 +1,58 @@
+services:
+  database:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_DB: bovista
+      POSTGRES_USER: bovista
+      POSTGRES_PASSWORD: local-development-only
+    volumes:
+      - bovista-postgres:/var/lib/postgresql/data
+      - ./scripts/docker-init.sql:/docker-entrypoint-initdb.d/10-bovista-test.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bovista -d bovista"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - bovista-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bovista:local-development-only@database:5432/bovista
+      BOVISTA_TEST_DATABASE_URL: postgresql+asyncpg://bovista:local-development-only@database:5432/bovista_test
+      REDIS_URL: redis://redis:6379/0
+      PORT: "10000"
+    ports:
+      - "10000:10000"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10000/health', timeout=3)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  bovista-postgres:
+  bovista-redis:

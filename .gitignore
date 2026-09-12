@@ -1,0 +1,9 @@
+.uv-cache/
+**/.venv/
+**/.env
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+.DS_Store
+Thumbs.db
