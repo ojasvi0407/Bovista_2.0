@@ -60,7 +60,9 @@ async def main() -> None:
                 "'treatments_immutable','clinical_reversals_immutable','laboratory_results_immutable',"
                 "'laboratory_transitions_immutable','case_transitions_immutable','audit_logs_immutable',"
                 "'triage_rule_packs_immutable','risk_rule_packs_immutable',"
-                "'diseases_version_history','symptoms_version_history'])"
+                "'diseases_version_history','symptoms_version_history',"
+                "'laboratory_result_history','laboratory_transition_history',"
+                "'case_transition_history'])"
             )
         )
         state_triggers = await connection.scalar(

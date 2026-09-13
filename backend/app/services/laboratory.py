@@ -39,6 +39,8 @@ async def refer(session, principal, payload):
             "An in-review veterinary case is required for laboratory referral.",
         )
     case.status = "REFERRED"
+    # Persist state before inserting history rows whose triggers validate it.
+    await session.flush()
     session.add(
         CaseTransition(
             case_id=case.id,
@@ -48,6 +50,7 @@ async def refer(session, principal, payload):
             reason="Laboratory referral",
         )
     )
+    await session.flush()
     sample = LaboratorySample(**payload.model_dump(), created_by_id=principal.user_id)
     session.add(sample)
     await session.flush()

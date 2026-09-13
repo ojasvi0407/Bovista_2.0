@@ -56,7 +56,9 @@ def test_frontend_container_serves_spa_and_proxies_api() -> None:
     assert "pnpm build" in dockerfile
     assert "listen 8080" in nginx
     assert "try_files $uri $uri/ /index.html" in nginx
-    assert "proxy_pass http://api:10000" in nginx
+    assert "resolver 127.0.0.11" in nginx
+    assert "set $api_upstream http://api:10000" in nginx
+    assert "proxy_pass $api_upstream" in nginx
 
 
 def test_root_compose_exposes_only_frontend_and_orders_startup() -> None:
@@ -66,11 +68,20 @@ def test_root_compose_exposes_only_frontend_and_orders_startup() -> None:
     assert set(services) == {"database", "redis", "migrate", "api", "worker", "frontend"}
     assert services["frontend"]["ports"] == ["0.0.0.0:8080:8080"]
     assert all("ports" not in services[name] for name in ("api", "database", "redis"))
+    assert "-h 127.0.0.1" in " ".join(services["database"]["healthcheck"]["test"])
     assert services["api"]["depends_on"]["migrate"]["condition"] == (
         "service_completed_successfully"
     )
     assert services["worker"]["depends_on"]["migrate"]["condition"] == (
         "service_completed_successfully"
+    )
+    worker_healthcheck = " ".join(services["worker"]["healthcheck"]["test"])
+    assert "scripts.start_worker" in worker_healthcheck
+    assert "/health" not in worker_healthcheck
+    migration_command = " ".join(services["migrate"]["command"])
+    assert "python -m scripts.provision_local_worker" in migration_command
+    assert services["migrate"]["environment"]["WORKER_USER_ID"] == (
+        services["worker"]["environment"]["WORKER_USER_ID"]
     )
     assert services["frontend"]["depends_on"]["api"]["condition"] == "service_healthy"
     assert set(compose["volumes"]) == {"bovista-postgres", "bovista-redis"}
@@ -131,3 +142,11 @@ def test_local_secrets_and_runbook_are_documented() -> None:
     assert "docker compose --env-file .env.local-docker logs api" in readme
     assert "New-NetFirewallRule" in readme
     assert "pg_dump" in readme
+
+
+def test_database_invariant_verifier_includes_release_history_triggers() -> None:
+    verifier = (ROOT / "backend" / "scripts" / "verify_db_invariants.py").read_text()
+
+    assert "laboratory_result_history" in verifier
+    assert "laboratory_transition_history" in verifier
+    assert "case_transition_history" in verifier

@@ -20,7 +20,7 @@ services:
     volumes:
       - bovista-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bovista_migrator -d bovista"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U bovista_migrator -d bovista"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -45,10 +45,17 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
+      ENVIRONMENT: development
       MIGRATION_DATABASE_URL: postgresql+asyncpg://bovista_migrator:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}@database:5432/bovista
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}
       WORKER_DATABASE_PASSWORD: ${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}
-    command: ["sh", "-c", "alembic upgrade head && python -m scripts.configure_database_roles"]
+      WORKER_USER_ID: ${WORKER_USER_ID:-00000000-0000-0000-0000-000000000001}
+    command:
+      [
+        "sh",
+        "-c",
+        "alembic upgrade head && python -m scripts.configure_database_roles && python -m scripts.provision_local_worker",
+      ]
     depends_on:
       database:
         condition: service_healthy
@@ -96,6 +103,18 @@ services:
       EVENT_DELIVERY_URL: ${EVENT_DELIVERY_URL:-https://127.0.0.1:9443/events}
       EVENT_DELIVERY_TOKEN: ${EVENT_DELIVERY_TOKEN:?Set EVENT_DELIVERY_TOKEN in .env.local-docker}
     command: ["python", "-m", "scripts.start_worker"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import os; command=open('/proc/1/cmdline','rb').read(); assert b'scripts.start_worker' in command; os.kill(1, 0)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     depends_on:
       migrate:
         condition: service_completed_successfully
