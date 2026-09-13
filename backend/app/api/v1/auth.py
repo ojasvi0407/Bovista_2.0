@@ -25,6 +25,7 @@ from app.schemas.auth import (
 from app.services.auth import (
     AuthenticationError,
     HttpOtpSender,
+    LogOtpSender,
     OtpDeliveryError,
     OtpSender,
     OtpStore,
@@ -66,6 +67,10 @@ def _otp_sender(request: Request, settings: Settings) -> OtpSender:
             settings.otp_delivery_url,
             settings.otp_delivery_token.get_secret_value(),
         )
+        request.app.state.otp_sender = sender
+        return sender
+    if settings.environment == "development" and settings.local_otp_logging:
+        sender = LogOtpSender()
         request.app.state.otp_sender = sender
         return sender
     return MissingOtpSender()

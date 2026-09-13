@@ -1,4 +1,5 @@
 import hmac
+import logging
 import secrets
 from dataclasses import dataclass
 from datetime import timedelta
@@ -35,6 +36,8 @@ from app.models.identity import (
     User,
     UserRole,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationError(Exception):
@@ -104,6 +107,11 @@ class HttpOtpSender:
 
     async def aclose(self) -> None:
         await self.client.aclose()
+
+
+class LogOtpSender:
+    async def send(self, mobile_number: str, code: str) -> None:
+        logger.warning("local_development_otp mobile=%s code=%s", mobile_number, code)
 
 
 @dataclass(frozen=True, slots=True)

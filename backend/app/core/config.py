@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     max_request_body_bytes: int = Field(default=1_048_576, ge=1024, le=10_485_760)
     otp_delivery_url: str | None = None
     otp_delivery_token: SecretStr | None = None
+    local_otp_logging: bool = False
     mfa_issuer: str = "Bovista Government Livestock Health"
     redis_url: SecretStr = SecretStr("redis://127.0.0.1:6379/0")
     outbreak_config_version: str = "outbreak-2026.1"
@@ -51,6 +52,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
+        if self.local_otp_logging and self.environment != "development":
+            raise ValueError("Local OTP logging is permitted only in development.")
         if not self.is_production:
             return self
         if not self.cors_origins or "*" in self.cors_origins:

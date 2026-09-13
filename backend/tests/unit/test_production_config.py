@@ -68,6 +68,12 @@ def test_production_requires_otp_delivery_configuration() -> None:
         _settings(otp_delivery_url=None)
 
 
+@pytest.mark.parametrize("environment", ["test", "production"])
+def test_non_development_rejects_local_otp_logging(environment: str) -> None:
+    with pytest.raises(ValidationError, match="Local OTP logging"):
+        _settings(environment=environment, local_otp_logging=True)
+
+
 def test_render_postgres_url_is_normalized_for_asyncpg() -> None:
     settings = _settings(database_url=SecretStr("postgres://app:pw@db/bovista"))
 
