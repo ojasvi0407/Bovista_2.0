@@ -1,0 +1,12 @@
+.git
+.github
+.pnpm-store
+node_modules
+dist
+backend
+docs
+scripts
+.env
+.env.*
+!.env.local-docker.example
+*.log
