@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,15 @@ def error_envelope(request: Request, code: str, message: str) -> dict[str, Any]:
 
 
 def register_exception_handlers(app: FastAPI, *, expose_internal_errors: bool) -> None:
+    @app.exception_handler(IntegrityError)
+    async def handle_integrity_error(request: Request, error: IntegrityError) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content=error_envelope(
+                request, "CONFLICT", "The request conflicts with existing data."
+            ),
+        )
+
     @app.exception_handler(StarletteHTTPException)
     async def handle_http_error(request: Request, error: StarletteHTTPException) -> JSONResponse:
         messages = {
@@ -63,10 +73,10 @@ def register_exception_handlers(app: FastAPI, *, expose_internal_errors: bool) -
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, error: Exception) -> JSONResponse:
-        logger.exception(
-            "Unhandled API error (request_id=%s)",
+        logger.error(
+            "Unhandled API error (request_id=%s, type=%s)",
             request.state.request_id,
-            exc_info=error,
+            type(error).__name__,
         )
         message = str(error) if expose_internal_errors else "An unexpected error occurred."
         return JSONResponse(

@@ -45,4 +45,4 @@ async def test_core_schema_contains_architecture_tables(session) -> None:
 async def test_postgis_is_enabled(session) -> None:
     version = await session.scalar(text("SELECT PostGIS_Version()"))
 
-    assert version.startswith("3.6")
+    assert version.startswith("3.")

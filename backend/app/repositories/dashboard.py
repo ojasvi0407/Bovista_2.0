@@ -10,6 +10,7 @@ from app.models.clinical import Vaccination
 from app.models.decisions import RiskScore, TriageResult
 from app.models.geography import Location
 from app.models.laboratory import LaboratorySample
+from app.models.operations import ClinicalReversal
 from app.models.reports import Animal, DiseaseReport, Farm
 from app.models.surveillance import Outbreak, VeterinaryCase
 
@@ -87,6 +88,9 @@ async def dashboard_totals(session: AsyncSession, query: DashboardQuery) -> dict
             Vaccination.administered_on <= date.today(),
             Vaccination.next_due_on.is_not(None),
             Vaccination.next_due_on >= date.today(),
+            ~select(ClinicalReversal.id)
+            .where(ClinicalReversal.vaccination_id == Vaccination.id)
+            .exists(),
         )
     )
     active_cases = await session.scalar(

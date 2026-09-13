@@ -5,14 +5,37 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.geography import Location
 from app.models.reports import Animal, Farm
+from app.repositories.operations import farm_scope
 
 
-async def get_farm(session: AsyncSession, farm_id: UUID) -> Farm | None:
-    return await session.get(Farm, farm_id)
+async def animal_page(session, principal, *, limit, cursor=None):
+    statement = (
+        select(Animal)
+        .join(Farm)
+        .join(Location, Farm.location_id == Location.id)
+        .where(Animal.deleted_at.is_(None), Farm.deleted_at.is_(None), farm_scope(principal))
+    )
+    if cursor:
+        statement = statement.where(Animal.id < cursor)
+    return list(
+        (await session.scalars(statement.order_by(Animal.id.desc()).limit(limit + 1))).all()
+    )
 
 
-async def get_animal(session: AsyncSession, animal_id: UUID) -> Animal | None:
-    animal = await session.get(Animal, animal_id)
+async def get_farm(session: AsyncSession, farm_id: UUID, *, lock: bool = False) -> Farm | None:
+    statement = select(Farm).where(Farm.id == farm_id)
+    if lock:
+        statement = statement.with_for_update()
+    return await session.scalar(statement)
+
+
+async def get_animal(
+    session: AsyncSession, animal_id: UUID, *, lock: bool = False
+) -> Animal | None:
+    statement = select(Animal).where(Animal.id == animal_id)
+    if lock:
+        statement = statement.with_for_update()
+    animal = await session.scalar(statement)
     return animal if animal is not None and animal.deleted_at is None else None
 
 

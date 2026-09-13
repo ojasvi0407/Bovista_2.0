@@ -90,6 +90,10 @@ class AuthIdentity(TimestampMixin, Base):
     )
     failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    mfa_failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
+    mfa_locked_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class MfaCredential(UUID7PrimaryKeyMixin, TimestampMixin, Base):
@@ -108,6 +112,7 @@ class MfaCredential(UUID7PrimaryKeyMixin, TimestampMixin, Base):
 
 class MfaChallenge(UUID7PrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "mfa_challenges"
+    attempts: Mapped[int] = mapped_column(default=0, nullable=False)
 
     user_id: Mapped[UUID] = mapped_column(
         Uuid,

@@ -2,7 +2,7 @@ import hashlib
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, literal, select
+from sqlalchemy import func, literal, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import utc_now
@@ -342,6 +342,9 @@ class DecisionService:
                 )
             )
             if case is None:
+                await self.session.execute(
+                    text("SELECT set_config('app.internal_action', " "'risk.case.create', true)")
+                )
                 self.session.add(
                     VeterinaryCase(
                         disease_report_id=report.id,

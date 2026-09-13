@@ -9,7 +9,7 @@ import httpx
 import jwt
 import pyotp
 from redis.asyncio import Redis
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -302,6 +302,12 @@ async def authenticate_staff_password(
     now = utc_now()
     if identity is not None and identity.locked_until is not None and identity.locked_until > now:
         raise AuthenticationError("The staff account is temporarily locked.")
+    if (
+        identity is not None
+        and identity.mfa_locked_until is not None
+        and identity.mfa_locked_until > now
+    ):
+        raise AuthenticationError("The staff account is temporarily locked.")
     candidate_hash = (
         identity.password_hash
         if identity is not None and identity.password_hash is not None
@@ -323,12 +329,10 @@ async def authenticate_staff_password(
         raise AuthenticationError("Invalid staff credentials.")
     identity.failed_attempts = 0
     identity.locked_until = None
-    await session.execute(
-        delete(MfaChallenge).where(
-            MfaChallenge.user_id == user.id,
-            or_(MfaChallenge.used_at.is_not(None), MfaChallenge.expires_at <= now),
-        )
-    )
+    # A newly issued challenge replaces every previous challenge for the account.
+    # The account-level MFA failure counter prevents challenge reissuance from
+    # resetting the guess budget.
+    await session.execute(delete(MfaChallenge).where(MfaChallenge.user_id == user.id))
     await session.flush()
     challenge = MfaChallenge(
         user_id=user.id,
@@ -369,6 +373,16 @@ async def verify_staff_mfa(
         challenge_id = UUID(payload["jti"])
     except (KeyError, ValueError) as error:
         raise AuthenticationError("The MFA challenge is invalid or expired.") from error
+    # Keep lock order consistent with password authentication: account first,
+    # then its disposable challenge.
+    identity = await session.scalar(
+        select(AuthIdentity).where(AuthIdentity.user_id == user_id).with_for_update()
+    )
+    now = utc_now()
+    if identity is None or (
+        identity.mfa_locked_until is not None and identity.mfa_locked_until > now
+    ):
+        raise AuthenticationError("The staff account is temporarily locked.")
     challenge = await session.scalar(
         select(MfaChallenge).where(MfaChallenge.id == challenge_id).with_for_update()
     )
@@ -376,7 +390,8 @@ async def verify_staff_mfa(
         challenge is None
         or challenge.user_id != user_id
         or challenge.used_at is not None
-        or challenge.expires_at <= utc_now()
+        or challenge.expires_at <= now
+        or challenge.attempts >= 5
     ):
         raise AuthenticationError("The MFA challenge is invalid or expired.")
     user = await session.get(User, user_id)
@@ -384,9 +399,17 @@ async def verify_staff_mfa(
     if user is None or not user.is_active or credential is None or credential.verified_at is None:
         raise AuthenticationError("MFA is not enrolled.")
     secret = decrypt_secret(credential.totp_secret_encrypted, settings.mfa_encryption_key)
+    challenge.attempts += 1
     if not pyotp.TOTP(secret).verify(code, valid_window=1):
+        identity.mfa_failed_attempts += 1
+        if identity.mfa_failed_attempts >= 5:
+            identity.mfa_locked_until = now + timedelta(minutes=15)
+            challenge.used_at = now
+        await session.flush()
         raise AuthenticationError("The MFA code is invalid.")
-    challenge.used_at = utc_now()
+    identity.mfa_failed_attempts = 0
+    identity.mfa_locked_until = None
+    challenge.used_at = now
     await session.flush()
     return user, await issue_token_pair(session, user, device_id, settings)
 

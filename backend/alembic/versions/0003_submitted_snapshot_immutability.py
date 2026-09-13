@@ -15,8 +15,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute(
-        """
+    op.execute("""
         CREATE FUNCTION prevent_frozen_report_update() RETURNS trigger
         LANGUAGE plpgsql AS $$
         BEGIN
@@ -26,17 +25,13 @@ def upgrade() -> None:
           RETURN NEW;
         END;
         $$
-        """
-    )
-    op.execute(
-        """
+        """)
+    op.execute("""
         CREATE TRIGGER disease_reports_frozen
         BEFORE UPDATE OR DELETE ON disease_reports
         FOR EACH ROW EXECUTE FUNCTION prevent_frozen_report_update()
-        """
-    )
-    op.execute(
-        """
+        """)
+    op.execute("""
         CREATE FUNCTION prevent_frozen_report_child_mutation() RETURNS trigger
         LANGUAGE plpgsql AS $$
         DECLARE target_report_id uuid;
@@ -52,8 +47,7 @@ def upgrade() -> None:
           RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
         END;
         $$
-        """
-    )
+        """)
     for table in (
         "disease_report_symptoms",
         "report_context_snapshots",

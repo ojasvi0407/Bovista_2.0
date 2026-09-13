@@ -14,8 +14,16 @@ def test_container_and_render_contract() -> None:
     assert ".env" in dockerignore
     assert ".venv/" in dockerignore
     assert "healthCheckPath: /health" in render
-    assert "preDeployCommand: alembic upgrade head" in render
+    assert (
+        "preDeployCommand: alembic upgrade head && python -m scripts.configure_database_roles"
+        in render
+    )
     assert "dockerContext: ./backend" in render
+    assert "type: worker" in render
+    assert "dockerCommand: python -m scripts.start_worker" in render
+    assert "MIGRATION_DATABASE_URL" in render
+    assert "value: bovista_runtime" in render
+    assert "value: bovista_worker" in render
 
 
 def test_local_compose_includes_postgis_and_redis() -> None:
@@ -39,5 +47,8 @@ def test_environment_example_documents_render_runtime_inputs() -> None:
         "OTP_DELIVERY_URL",
         "OTP_DELIVERY_TOKEN",
         "MFA_ENCRYPTION_KEY",
+        "WORKER_USER_ID",
+        "EVENT_DELIVERY_URL",
+        "EVENT_DELIVERY_TOKEN",
     ):
         assert f"{key}=" in environment

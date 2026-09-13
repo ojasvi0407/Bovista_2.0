@@ -1,8 +1,8 @@
 # Backend core foundation implementation walkthrough
 
 This file preserves the implementation context for later Bovista work. The foundation now
-includes the original database, API, security, and risk/triage architecture plus the
-completed Phase 4 alert and de-identified surveillance-dashboard slice.
+includes the database, API, security, risk/triage, clinical, laboratory, alert,
+surveillance-dashboard, governance, and deployment architecture.
 
 ## Agreed operating model
 
@@ -54,22 +54,33 @@ completed Phase 4 alert and de-identified surveillance-dashboard slice.
 12. Added normalized vaccination and laboratory-sample persistence needed by dashboard
     metrics, forced RLS for both tables, immutable vaccination records, migration `0007`,
     a non-root container, Render Blueprint, and local PostGIS/Redis Compose stack.
+13. Completed scoped farm, herd, and cursor-paginated animal CRUD with version conflicts,
+    retention-safe archives, parent-child guards, audit entries, and outbox events.
+14. Added immutable vaccination and treatment command APIs, explicit reversal history,
+    corrected due-dose selection, clinical indexes, service authorization, and forced RLS.
+15. Added the fixed laboratory lifecycle with immutable transition/result history,
+    role-specific commands, result alerts, and case closure guards. Added explicit
+    veterinary case review, referral, resume, close, and history APIs.
+16. Added governed location, disease, symptom, triage-pack, and risk-pack administration;
+    published rule and audit history is database-protected from update and deletion.
+17. Added bounded MFA attempts, secure staff provisioning, a durable outbox worker with
+    internal outbreak analysis and HTTPS delivery, migrations through `0012`, CI with a
+    real PostGIS runtime role, and a Render background-worker definition.
 
 ## Verification checkpoint
 
-On 2026-09-12, the complete suite reported 82 passing tests. Ruff and Black were clean;
-the production dependency audit reported no known vulnerabilities. Alembic upgraded an
-empty database through `0007`, and `alembic check` reported no pending operations.
-PostgreSQL reported PostGIS, 16 forced-RLS domain tables, four frozen snapshot triggers,
-and the vaccination immutability trigger. Atomic idempotency claims and active potential-
-outbreak deduplication remain enforced at the PostgreSQL transaction/constraint boundary.
-The Docker and Render YAML contracts parse and pass static tests; this workstation did not
-have a Docker CLI available for an image build.
+On 2026-09-13, the pre-push suite reported 96 passing tests before the final documentation
+contract additions. Alembic upgraded an empty database through `0012`, and `alembic check`
+reported no pending operations. PostgreSQL reported PostGIS, 21 forced-RLS domain tables,
+four frozen report-snapshot triggers, eight clinical/audit/rule-history triggers, both
+workflow transition triggers, and a runtime role without superuser or RLS-bypass
+privileges. Direct database mutation of vaccination, audit, and rule-pack history was
+rejected. The final verification result and pushed commit are recorded in the delivery
+summary for this implementation run.
 
 ## Next hardening work
 
-Before a production pilot, complete the Phase 2 vaccination/treatment command APIs and
-Phase 3 laboratory lifecycle APIs, add staff MFA IP/device rate limits, governed rule-pack
-administration, historical surveillance baselines, key IDs/rotation, backup and restore
-drills, and observability. Configure the government SMS gateway, Redis, Render secrets,
-PostGIS database role, and an actual container build/deploy in the target environment.
+Before a production pilot, add staff MFA IP/device rate limits, historical surveillance
+baselines, key IDs and rotation, backup/restore drills, and production observability.
+Operators must configure the government SMS and event gateways, Redis, Render secrets,
+the worker service account, and deployment-specific incident-response controls.

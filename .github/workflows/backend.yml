@@ -1,0 +1,74 @@
+name: Backend verification
+on:
+  push:
+    branches: [main, complete-backend]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_PASSWORD: ci-postgres-password
+          POSTGRES_DB: bovista_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d bovista_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://bovista_runtime:ci-runtime-password-00000000000000@127.0.0.1:5432/bovista_test
+      BOVISTA_TEST_DATABASE_URL: postgresql+asyncpg://bovista_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/bovista_test
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://bovista_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/bovista_test
+      DATABASE_PASSWORD: ci-runtime-password-00000000000000
+      WORKER_DATABASE_PASSWORD: ci-worker-password-000000000000000
+      REQUIRE_NONOWNER_DATABASE_ROLE: "1"
+      ENVIRONMENT: test
+      AUDIT_HMAC_KEY: ci-audit-key-for-isolated-tests-only-000
+      JWT_SIGNING_KEY: ci-jwt-key-for-isolated-tests-only-00000
+      REFRESH_TOKEN_PEPPER: ci-refresh-key-for-isolated-tests-only
+      OTP_HMAC_KEY: ci-otp-key-for-isolated-tests-only-00000
+      MFA_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Initialize database without RLS bypass
+        env:
+          PGPASSWORD: ci-postgres-password
+        run: |
+          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS postgis"
+          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "CREATE ROLE bovista_migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'ci-migrator-password-000000000000'; CREATE ROLE bovista_runtime LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD 'ci-runtime-password-00000000000000'"
+          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "ALTER DATABASE bovista_test OWNER TO bovista_migrator; GRANT ALL ON SCHEMA public TO bovista_migrator"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: black --check .
+      - run: python -m pytest -q
+      - run: alembic upgrade head
+      - run: python -m scripts.configure_database_roles
+      - run: alembic check
+      - run: python -m scripts.verify_db_invariants
+      - run: python -m scripts.verify_history
+      - name: Build production container
+        run: docker build -t bovista-api:ci .
+      - name: Verify container startup and database health
+        run: |
+          docker run -d --name bovista-smoke --network host -e DATABASE_URL -e ENVIRONMENT -e AUDIT_HMAC_KEY -e JWT_SIGNING_KEY -e REFRESH_TOKEN_PEPPER -e OTP_HMAC_KEY -e MFA_ENCRYPTION_KEY bovista-api:ci
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:10000/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs bovista-smoke
+          exit 1
+      - name: Stop smoke container
+        if: always()
+        run: docker rm -f bovista-smoke || true

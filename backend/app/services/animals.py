@@ -3,11 +3,13 @@ import json
 from dataclasses import dataclass
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import utc_now
-from app.models.reports import Animal
+from app.models.reports import Animal, Herd
 from app.repositories.animals import (
+    animal_page,
     get_animal,
     get_farm,
     get_farm_location_path,
@@ -34,6 +36,17 @@ class AnimalNotFoundError(Exception):
 
 class AnimalVersionConflictError(Exception):
     pass
+
+
+async def paginated_animals(session, principal, *, limit, cursor):
+    if not set(principal.roles) & {"ADMIN", "FARMER", "VETERINARIAN", "PARAVET"}:
+        raise AnimalAccessError("You cannot list animals.")
+    rows = await animal_page(session, principal, limit=limit, cursor=cursor)
+    return {
+        "data": [_view(row) for row in rows[:limit]],
+        "meta": {"next_cursor": str(rows[limit - 1].id) if len(rows) > limit else None},
+        "error": None,
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,7 +108,7 @@ async def create_animal(
             raise AnimalAccessError("The original request is still being processed.")
         return AnimalMutationResult(claim.response_body, replay=True)
 
-    farm = await get_farm(session, payload.farm_id)
+    farm = await get_farm(session, payload.farm_id, lock=True)
     if farm is None or farm.deleted_at is not None:
         raise FarmNotFoundError("Farm not found.")
     if not _can_manage_farm(principal, farm.owner_id):
@@ -103,11 +116,20 @@ async def create_animal(
 
     animal = Animal(
         farm_id=farm.id,
+        herd_id=payload.herd_id,
         species=payload.species,
         tag_number=payload.tag_number,
         sex=payload.sex,
         birth_date=payload.birth_date,
     )
+    if payload.herd_id:
+        herd = await session.scalar(
+            select(Herd)
+            .where(Herd.id == payload.herd_id, Herd.deleted_at.is_(None))
+            .with_for_update()
+        )
+        if herd is None or herd.farm_id != farm.id or herd.species != payload.species:
+            raise AnimalAccessError("The herd must belong to the same farm and species.")
     session.add(animal)
     await session.flush()
     data = _view(animal)
@@ -145,7 +167,11 @@ async def get_animal_by_id(
         raise AnimalNotFoundError("Animal not found.")
     farm = await get_farm(session, animal.farm_id)
     location_path = await get_farm_location_path(session, animal.farm_id)
-    if farm is None or not _can_read_farm(principal, farm.owner_id, location_path):
+    if (
+        farm is None
+        or farm.deleted_at is not None
+        or not _can_read_farm(principal, farm.owner_id, location_path)
+    ):
         raise AnimalAccessError("You cannot access this animal.")
     return _view(animal)
 
@@ -174,7 +200,7 @@ async def update_animal(
         if claim.response_body is None:
             raise AnimalVersionConflictError("The original request is still being processed.")
         return AnimalMutationResult(claim.response_body, replay=True)
-    animal = await get_animal(session, animal_id)
+    animal = await get_animal(session, animal_id, lock=True)
     if animal is None:
         raise AnimalNotFoundError("Animal not found.")
     farm = await get_farm(session, animal.farm_id)
@@ -204,7 +230,7 @@ async def delete_animal(
     claim = await claim_idempotency(session, principal.user_id, idempotency_key, request_hash)
     if claim.is_replay:
         return True
-    animal = await get_animal(session, animal_id)
+    animal = await get_animal(session, animal_id, lock=True)
     if animal is None:
         raise AnimalNotFoundError("Animal not found.")
     farm = await get_farm(session, animal.farm_id)

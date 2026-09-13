@@ -30,10 +30,10 @@
 
 **Interfaces:** Produces `AnimalService.create/list/get/update/delete(principal, ...)` and `/api/v1/farms`, `/herds`, `/animals` routes.
 
-- [ ] Write a failing test proving a farmer can create/list an own-farm animal and cannot read another farmer’s animal.
-- [ ] Run `backend/.venv/Scripts/python.exe -m pytest tests/api/test_animals.py -v` and observe route-not-found behavior.
-- [ ] Implement Pydantic schemas, repository queries scoped by ownership/location, versioned updates, soft deletion, idempotency, and atomic audit/outbox writes.
-- [ ] Re-run the test and confirm both allowed and denied behavior.
+- [x] Write a failing test proving a farmer can create/list an own-farm animal and cannot read another farmer’s animal.
+- [x] Run `backend/.venv/Scripts/python.exe -m pytest tests/api/test_animals.py -v` and observe route-not-found behavior.
+- [x] Implement Pydantic schemas, repository queries scoped by ownership/location, versioned updates, soft deletion, idempotency, and atomic audit/outbox writes.
+- [x] Re-run the test and confirm both allowed and denied behavior.
 
 ### Task 2: Vaccination and treatment records
 
@@ -44,10 +44,10 @@
 
 **Interfaces:** Produces `VaccinationService.record/list_due()` and `TreatmentService.record/list()`.
 
-- [ ] Write failing tests proving an authorized veterinarian records a vaccination with batch and next due date; due endpoint excludes future doses; farmer cannot create treatment; unauthorized staff cannot read a treatment.
-- [ ] Run the two test modules and observe missing route/model failures.
-- [ ] Implement `vaccinations` and `treatments` tables, non-empty vaccine/medicine validation, positive dosage/duration checks, animal/case ownership checks, immutable write behavior, due-date index, and route/service policy enforcement.
-- [ ] Re-run tests and confirm CRUD, due filtering, validation, and scope behavior.
+- [x] Write failing tests proving an authorized veterinarian records a vaccination with batch and next due date; due endpoint excludes future doses; farmer cannot create treatment; unauthorized staff cannot read a treatment.
+- [x] Run the two test modules and observe missing route/model failures.
+- [x] Implement `vaccinations` and `treatments` tables, non-empty vaccine/medicine validation, positive dosage/duration checks, animal/case ownership checks, immutable write behavior, due-date index, and route/service policy enforcement.
+- [x] Re-run tests and confirm CRUD, due filtering, validation, and scope behavior.
 
 ### Task 3: Laboratory referral and result lifecycle
 
@@ -58,10 +58,10 @@
 
 **Interfaces:** Produces `LaboratoryService.refer/collect/receive/start_processing/publish_result/review()` and `/api/v1/lab/samples`, `/api/v1/lab/results`.
 
-- [ ] Write failing tests that reject a lab result before receipt, reject a farmer publishing results, and create a recipient-scoped lab-result alert after valid publication.
-- [ ] Run the laboratory test module and observe missing lifecycle services/routes.
-- [ ] Implement sample/result/transition tables, the fixed state machine, specimen metadata, chain-of-custody fields, result validation, role checks, and transactional case/alert/audit/outbox updates.
-- [ ] Re-run tests and confirm valid sequence succeeds and invalid transitions return `409`.
+- [x] Write failing tests that reject a lab result before receipt, reject a farmer publishing results, and create a recipient-scoped lab-result alert after valid publication.
+- [x] Run the laboratory test module and observe missing lifecycle services/routes.
+- [x] Implement sample/result/transition tables, the fixed state machine, specimen metadata, chain-of-custody fields, result validation, role checks, and transactional case/alert/audit/outbox updates.
+- [x] Re-run tests and confirm valid sequence succeeds and invalid transitions return `409`.
 
 ### Task 4: Alert read/acknowledge API and surveillance dashboard
 
@@ -89,7 +89,7 @@
 - [x] Write failing deployment-contract tests checking documented `PORT`, required environment variables, `.dockerignore` exclusion of `.env`/`.venv`, and health endpoint.
 - [x] Run the deployment test and observe missing Docker artifacts.
 - [x] Implement a non-root Python 3.12 slim Docker image, production Uvicorn startup, Compose PostgreSQL/PostGIS and Redis services, Render configuration instructions, and complete setup/test/migration/security documentation.
-- [ ] Run `pytest -q`, `ruff check .`, `black --check .`, `alembic upgrade head`, and `docker build -t livestock-backend .`.
+- [x] Run `pytest -q`, `ruff check .`, `black --check .`, and `alembic upgrade head`; GitHub CI performs the Docker build and health smoke because Docker is unavailable on this workstation.
 
 ### Task 6: CRUD corrections, contract cleanup, and documentation maintenance
 
@@ -100,10 +100,10 @@
 
 **Interfaces:** Preserves stable `/api/v1` names, adds missing CRUD actions, and keeps response envelopes and error codes backwards-compatible.
 
-- [ ] Write focused tests for delete/soft-delete semantics, stale-version conflicts, canonical route names, and required environment-variable documentation.
-- [ ] Run those tests and observe each missing correction fail before implementation.
-- [ ] Implement only the required CRUD/API corrections, update renamed symbols and imports consistently, and keep UI-facing payload fields stable; this workspace has no frontend, so no unrelated UI code is introduced.
-- [ ] Update README examples and `.env.example` without real secrets, run Ruff/Black, and execute the focused plus full test suite.
+- [x] Write focused tests for delete/soft-delete semantics, stale-version conflicts, canonical route names, and required environment-variable documentation.
+- [x] Run those tests and observe each missing correction fail before implementation.
+- [x] Implement only the required CRUD/API corrections, update renamed symbols and imports consistently, and keep UI-facing payload fields stable; this workspace has no frontend, so no unrelated UI code is introduced.
+- [x] Update README examples and `.env.example` without real secrets, run Ruff/Black, and execute the focused plus full test suite.
 
 ## Plan self-review
 

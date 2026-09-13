@@ -30,6 +30,19 @@ async def _drop_test_rls_policies(connection) -> None:
 
 
 async def _drop_snapshot_functions(connection) -> None:
+    for name in (
+        "prevent_vaccination_mutation",
+        "prevent_clinical_history_mutation",
+        "enforce_lab_transition",
+        "enforce_case_transition",
+        "prevent_published_rule_mutation",
+        "enforce_lab_referral_case",
+        "enforce_reference_version_history",
+        "enforce_lab_result_history",
+        "enforce_lab_transition_history",
+        "enforce_case_transition_history",
+    ):
+        await connection.execute(text(f"DROP FUNCTION IF EXISTS {name}()"))
     await connection.execute(text("DROP FUNCTION IF EXISTS prevent_frozen_report_update()"))
     await connection.execute(text("DROP FUNCTION IF EXISTS prevent_frozen_report_child_mutation()"))
 

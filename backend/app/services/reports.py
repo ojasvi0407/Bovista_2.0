@@ -98,17 +98,29 @@ async def create_report(
     _authorize_report_mutation(principal, farm.owner_id, location.hierarchy_path)
     if payload.animal_id is not None:
         animal = await session.get(Animal, payload.animal_id)
-        if animal is None or animal.farm_id != farm.id or animal.species != payload.species:
+        if (
+            animal is None
+            or animal.deleted_at is not None
+            or animal.farm_id != farm.id
+            or animal.species != payload.species
+        ):
             raise InvalidReportError("The animal does not belong to this farm and species.")
     if payload.herd_id is not None:
         herd = await session.get(Herd, payload.herd_id)
-        if herd is None or herd.farm_id != farm.id or herd.species != payload.species:
+        if (
+            herd is None
+            or herd.deleted_at is not None
+            or herd.farm_id != farm.id
+            or herd.species != payload.species
+        ):
             raise InvalidReportError("The herd does not belong to this farm and species.")
     symptom_codes = {item.code for item in payload.symptoms}
     symptoms = {
         symptom.code: symptom
         for symptom in (
-            await session.scalars(select(Symptom).where(Symptom.code.in_(symptom_codes)))
+            await session.scalars(
+                select(Symptom).where(Symptom.code.in_(symptom_codes), Symptom.active.is_(True))
+            )
         ).all()
     }
     missing = symptom_codes - symptoms.keys()

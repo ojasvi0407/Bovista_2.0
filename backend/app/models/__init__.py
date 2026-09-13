@@ -21,6 +21,13 @@ from app.models.identity import (
     UserRole,
 )
 from app.models.laboratory import LaboratorySample
+from app.models.operations import (
+    CaseTransition,
+    ClinicalReversal,
+    LaboratoryResult,
+    LaboratoryTransition,
+    Treatment,
+)
 from app.models.reports import (
     Animal,
     Attachment,
@@ -43,6 +50,11 @@ from app.models.surveillance import (
 from app.models.trust import AuditLog, IdempotencyReceipt, OutboxEvent
 
 __all__ = [
+    "CaseTransition",
+    "ClinicalReversal",
+    "LaboratoryResult",
+    "LaboratoryTransition",
+    "Treatment",
     "Alert",
     "Animal",
     "Attachment",

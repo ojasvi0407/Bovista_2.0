@@ -2,8 +2,8 @@
 
 This directory contains the government-operated livestock-health backend foundation for
 farmers, veterinarians, para-veterinarians, laboratory staff, district officers, and
-administrators. Its implemented scope is database, API, security, and explainable
-triage/risk architecture.
+administrators. It implements database, API, security, explainable triage/risk, clinical
+operations, laboratory workflow, surveillance, and durable event-delivery architecture.
 
 ## Runtime
 
@@ -56,8 +56,40 @@ Content-Type: application/json
 
 Staff first call `/api/v1/auth/staff/login` with their government identifier and password,
 then submit the returned challenge and current TOTP to `/api/v1/auth/staff/mfa/verify`.
-The five-minute MFA challenge is persisted and single-use. Call `/api/v1/auth/refresh`
+The five-minute MFA challenge is persisted, single-use, and locked after five failed
+attempts. Call `/api/v1/auth/refresh`
 once per refresh token; reuse is treated as credential theft.
+
+Create the first staff administrator from a trusted shell. The command prompts securely
+for the password, TOTP seed, and current TOTP rather than exposing credentials in process
+arguments:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.provision_staff
+```
+
+## Operational APIs
+
+Farm and herd resources support scoped create, list, detail, versioned update, and
+retention-safe archive operations at `/api/v1/farms` and `/api/v1/herds`. Animals use the
+same scoped CRUD pattern at `/api/v1/animals`; list endpoints use cursor pagination.
+Archiving a parent with active children is rejected.
+
+Authorized veterinary staff record immutable vaccinations and treatments at
+`/api/v1/vaccinations` and `/api/v1/treatments`. Corrections use explicit `/reverse`
+commands with a reason, preserving the original clinical record. The vaccination due
+endpoint excludes future, reversed, and superseded doses.
+
+Laboratory samples follow the enforced sequence REFERRED, COLLECTED, RECEIVED, PROCESSING,
+RESULTED, REVIEWED under `/api/v1/lab`. Each state change has its own role-authorized
+command, an immutable transition record, audit evidence, and transactional recipient
+alerts. Veterinary cases expose list/detail/history plus review, refer, resume, and close
+commands; cases with unresolved laboratory work cannot close.
+
+Administrators manage location, disease, and symptom reference data through
+`/api/v1/locations`, `/api/v1/diseases`, and `/api/v1/symptoms`. Versioned triage and risk
+rule packs are published through `/api/v1/rule-packs`; published contents are protected
+from mutation by database triggers.
 
 ## Reports and decisions
 
@@ -114,6 +146,7 @@ in `_test` because fixtures rebuild the schema.
 .\.venv\Scripts\ruff.exe check .
 .\.venv\Scripts\black.exe --check .
 .\.venv\Scripts\python.exe -m scripts.verify_db_invariants
+.\.venv\Scripts\python.exe -m scripts.verify_history
 ```
 
 Livestock records, rule-versioned decisions, outbreak transitions, and HMAC-chained audit
@@ -139,14 +172,24 @@ The image runs as a non-root user, listens on Render's `PORT`, and includes a `/
 readiness check that verifies PostgreSQL connectivity. Do not pass secrets as Docker build
 arguments.
 
-The repository-root `render.yaml` defines the Docker web service, managed PostgreSQL,
-health check, generated signing secrets, and `alembic upgrade head` as the pre-deploy
-command. Set `CORS_ORIGINS` to a JSON list of exact frontend origins, set `REDIS_URL` to
+The repository-root `render.yaml` defines the Docker web service, durable background
+worker, managed PostgreSQL, health check, generated signing secrets, and
+`alembic upgrade head` as the pre-deploy command. Set `CORS_ORIGINS` to a JSON list of
+exact frontend origins, set `REDIS_URL` to
 a private Render Key Value connection URL, and provide a valid Fernet key for
 `MFA_ENCRYPTION_KEY`. Also configure the two OTP delivery variables described above.
 Enable PostGIS on the Render database; the initial migration also requests the extension.
 Render pre-deploy commands require an eligible paid service plan.
 
+The worker runs `python -m scripts.worker`. Set `WORKER_USER_ID` to an active provisioned
+administrator service account. Set `EVENT_DELIVERY_URL` to the government's HTTPS event
+gateway and `EVENT_DELIVERY_TOKEN` to a distinct secret of at least 32 characters. The
+worker processes outbreak-analysis requests internally and forwards all other outbox
+events with an idempotency key, bounded retries, and exponential backoff. Render copies
+the API's security configuration into the worker so audit signatures remain consistent.
+
 For a manual Render service, use `backend` as the Docker context, `backend/Dockerfile` as
 the Dockerfile, `/health` as the health-check path, and `alembic upgrade head` as the
 pre-deploy command. The service must use a database role with `NOBYPASSRLS`.
+Run the worker as a separate always-on background service using the same image, database,
+and security configuration.

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -10,12 +11,17 @@ from alembic import context
 from app.core.config import get_settings
 from app.db.alembic_config import escape_configparser_value
 from app.db.base import Base
+from scripts.database_url import normalize_postgres_url
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-database_url = get_settings().database_url.get_secret_value()
+database_url = os.environ.get("MIGRATION_DATABASE_URL")
+if database_url:
+    database_url = normalize_postgres_url(database_url)
+else:
+    database_url = get_settings().database_url.get_secret_value()
 config.set_main_option("sqlalchemy.url", escape_configparser_value(database_url))
 target_metadata = Base.metadata
 

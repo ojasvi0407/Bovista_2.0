@@ -61,6 +61,7 @@ class Herd(UUID7PrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     species: Mapped[str] = mapped_column(String(40), nullable=False)
     animal_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         CheckConstraint("animal_count >= 0", name="ck_herds_animal_count_nonnegative"),
@@ -103,19 +104,43 @@ class Animal(UUID7PrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
 class Disease(UUID7PrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "diseases"
 
-    code: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
+    code: Mapped[str] = mapped_column(String(40), nullable=False)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("code", "revision", name="uq_disease_code_revision"),
+        Index(
+            "uq_active_disease_code",
+            "code",
+            unique=True,
+            postgresql_where=text("active"),
+        ),
+    )
 
 
 class Symptom(UUID7PrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "symptoms"
 
-    code: Mapped[str] = mapped_column(String(60), unique=True, nullable=False)
+    code: Mapped[str] = mapped_column(String(60), nullable=False)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     severity: Mapped[int] = mapped_column(Integer, nullable=False)
+    active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    __table_args__ = (CheckConstraint("severity BETWEEN 1 AND 5", name="ck_symptoms_severity"),)
+    __table_args__ = (
+        CheckConstraint("severity BETWEEN 1 AND 5", name="ck_symptoms_severity"),
+        UniqueConstraint("code", "revision", name="uq_symptom_code_revision"),
+        Index(
+            "uq_active_symptom_code",
+            "code",
+            unique=True,
+            postgresql_where=text("active"),
+        ),
+    )
 
 
 class DiseaseSymptom(Base):

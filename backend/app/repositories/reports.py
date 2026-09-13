@@ -13,10 +13,12 @@ async def get_farm(session: AsyncSession, farm_id: UUID) -> Farm | None:
 
 async def get_report(session: AsyncSession, report_id: UUID) -> DiseaseReport | None:
     return await session.scalar(
-        select(DiseaseReport).where(
+        select(DiseaseReport)
+        .where(
             DiseaseReport.id == report_id,
             DiseaseReport.deleted_at.is_(None),
         )
+        .with_for_update()
     )
 
 
@@ -76,6 +78,7 @@ async def list_visible_reports(
     roles: tuple[str, ...],
     location_path: str | None,
     limit: int = 50,
+    cursor: UUID | None = None,
 ) -> list[DiseaseReport]:
     statement = (
         select(DiseaseReport)
@@ -87,7 +90,9 @@ async def list_visible_reports(
                 location_path=location_path,
             ),
         )
-        .order_by(DiseaseReport.created_at.desc(), DiseaseReport.id.desc())
+        .order_by(DiseaseReport.id.desc())
         .limit(limit)
     )
+    if cursor:
+        statement = statement.where(DiseaseReport.id < cursor)
     return list((await session.scalars(statement)).all())

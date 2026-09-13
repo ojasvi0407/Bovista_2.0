@@ -15,7 +15,7 @@ from app.services.animals import (
     create_animal,
     delete_animal,
     get_animal_by_id,
-    list_animals,
+    paginated_animals,
     update_animal,
 )
 from app.services.trust import IdempotencyConflictError
@@ -59,12 +59,10 @@ async def list_visible(
     principal: CurrentPrincipalDependency,
     session: PrincipalSessionDependency,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: UUID | None = None,
 ) -> dict[str, Any]:
     try:
-        return envelope(
-            await list_animals(session, principal, limit=limit),
-            meta={"next_cursor": None},
-        )
+        return await paginated_animals(session, principal, limit=limit, cursor=cursor)
     except AnimalAccessError as error:
         raise ApiError(403, "FORBIDDEN", str(error)) from error
 

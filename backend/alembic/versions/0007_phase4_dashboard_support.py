@@ -101,15 +101,13 @@ def upgrade() -> None:
         "laboratory_samples",
         ["status", "created_at"],
     )
-    op.execute(
-        """
+    op.execute("""
         CREATE FUNCTION prevent_vaccination_mutation() RETURNS trigger AS $$
         BEGIN
           RAISE EXCEPTION 'vaccination records are immutable';
         END;
         $$ LANGUAGE plpgsql
-        """
-    )
+        """)
     op.execute(
         "CREATE TRIGGER vaccinations_immutable BEFORE UPDATE OR DELETE ON vaccinations "
         "FOR EACH ROW EXECUTE FUNCTION prevent_vaccination_mutation()"

@@ -16,6 +16,9 @@ def server_config(environment: Mapping[str, str]) -> dict[str, object]:
 
 
 def main() -> None:
+    from scripts.database_url import ensure_database_url
+
+    ensure_database_url()
     uvicorn.run(**server_config(os.environ))
 
 

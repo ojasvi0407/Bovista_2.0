@@ -116,12 +116,17 @@ async def list_visible(
     principal: CurrentPrincipalDependency,
     session: PrincipalSessionDependency,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: UUID | None = None,
 ) -> dict[str, Any]:
     reports = await list_visible_reports(
         session,
         user_id=principal.user_id,
         roles=principal.roles,
         location_path=principal.location_path,
-        limit=limit,
+        limit=limit + 1,
+        cursor=cursor,
     )
-    return envelope([_view(report) for report in reports], meta={"next_cursor": None})
+    return envelope(
+        [_view(report) for report in reports[:limit]],
+        meta={"next_cursor": str(reports[limit - 1].id) if len(reports) > limit else None},
+    )

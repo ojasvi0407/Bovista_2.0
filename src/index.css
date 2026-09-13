@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Work Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-primary: #166534;
+  --color-primary-dark: #14532d;
+  --color-primary-hover: #15803d;
+  --color-primary-surface: #f0fdf4;
+  --color-primary-muted: #dcfce7;
+
+  --color-surface: #f7f9f7;
+  --color-card: #ffffff;
+  --color-border: #d1d9d1;
+  --color-border-strong: #9ca89c;
+
+  --color-risk-low: #15803d;
+  --color-risk-low-bg: #f0fdf4;
+  --color-risk-medium: #b45309;
+  --color-risk-medium-bg: #fffbeb;
+  --color-risk-high: #b91c1c;
+  --color-risk-high-bg: #fef2f2;
+  --color-risk-critical: #7c2d12;
+  --color-risk-critical-bg: #fff7ed;
+
+  --color-status-new: #1d4ed8;
+  --color-status-active: #166534;
+  --color-status-pending: #b45309;
+  --color-status-resolved: #4b5563;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #f7f9f7;
+  color: #111827;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d9d1; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca89c; }
+
+* { scrollbar-width: thin; scrollbar-color: #d1d9d1 transparent; }
+
+.wizard-step-dot {
+  transition: all 0.2s ease;
+}
+
+.risk-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.map-district:hover {
+  filter: brightness(0.9);
+  cursor: pointer;
+}
+
+/* Leaflet overrides */
+.leaflet-container {
+  font-family: var(--font-body);
+  z-index: 0;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}
+.leaflet-tooltip {
+  border-radius: 4px !important;
+  font-family: var(--font-body) !important;
+  font-size: 12px !important;
+  border: 1px solid #d1d9d1 !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08) !important;
+}
+/* Transparent background for the permanent risk-zone label tooltip */
+.leaflet-tooltip-top.risk-zone-label,
+.leaflet-tooltip.risk-zone-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  pointer-events: none !important;
+}
+
+.offline-banner {
+  background: repeating-linear-gradient(
+    45deg,
+    #fef3c7,
+    #fef3c7 10px,
+    #fde68a 10px,
+    #fde68a 20px
+  );
+}
