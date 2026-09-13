@@ -154,6 +154,80 @@ events are retention-oriented and have no ordinary hard-delete API. Backups, key
 incident response, SMS gateway integration, and government deployment controls remain
 operational responsibilities.
 
+## Local Docker deployment on Windows and a trusted LAN
+
+This deployment is for development on a trusted private network. It does not configure
+TLS or safely expose Bovista to the public internet. Install Docker Desktop with the WSL 2
+backend, start Docker Desktop, and run the following commands from the repository root.
+
+Generate the ignored local environment file. The command refuses to replace an existing
+file; use `-Force` only when you intentionally want to rotate all local secrets.
+
+```powershell
+.\scripts\initialize-local-docker.ps1
+docker compose --env-file .env.local-docker config --quiet
+docker compose --env-file .env.local-docker up --build -d
+docker compose --env-file .env.local-docker ps -a
+```
+
+The `migrate` job must show exit code `0`. The database, Redis, API, and frontend should
+be healthy, and the worker should remain running. The only host port is TCP 8080 on the
+frontend; PostgreSQL, Redis, and FastAPI remain on the private Compose network.
+
+Check the API through the same Nginx endpoint used by browsers, then load the frontend:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8080/health
+Invoke-WebRequest http://127.0.0.1:8080/
+```
+
+Find the host's active LAN address and repeat the health check from the host or another
+device on the same network. Open `http://<LAN-IP>:8080` on phones and computers.
+
+```powershell
+$lanIp = Get-NetIPConfiguration |
+  Where-Object { $_.NetAdapter.Status -eq "Up" -and $_.IPv4DefaultGateway } |
+  Select-Object -ExpandProperty IPv4Address |
+  Select-Object -First 1 -ExpandProperty IPAddress
+Invoke-RestMethod "http://${lanIp}:8080/health"
+```
+
+If another device cannot connect, run this once in an elevated PowerShell window to allow
+only private-profile inbound TCP traffic on port 8080:
+
+```powershell
+New-NetFirewallRule -DisplayName "Bovista LAN HTTP" -Direction Inbound `
+  -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private
+```
+
+Farmer OTP delivery is deliberately logged only in this development deployment. Request
+an OTP in the application or through `/api/v1/auth/otp/request`, then view the code without
+printing the environment file:
+
+```powershell
+docker compose --env-file .env.local-docker logs api |
+  Select-String "local_development_otp"
+```
+
+Routine operations preserve the named PostgreSQL and Redis volumes:
+
+```powershell
+docker compose --env-file .env.local-docker logs --tail 100 api worker
+docker compose --env-file .env.local-docker restart
+docker compose --env-file .env.local-docker down
+```
+
+Do not add `--volumes` to the normal shutdown command. Before an upgrade or host move,
+create a PostgreSQL custom-format backup from inside the private database container:
+
+```powershell
+New-Item -ItemType Directory -Force .\backups | Out-Null
+docker compose --env-file .env.local-docker exec -T database `
+  pg_dump -U bovista_migrator -d bovista --format=custom --file=/tmp/bovista.dump
+docker compose --env-file .env.local-docker cp `
+  database:/tmp/bovista.dump .\backups\bovista.dump
+```
+
 ## Docker and Render
 
 Build and run the production image locally:

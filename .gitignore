@@ -1,6 +1,7 @@
 .uv-cache/
 **/.venv/
 **/.env
+.env.local-docker
 **/__pycache__/
 **/*.py[cod]
 **/.pytest_cache/
