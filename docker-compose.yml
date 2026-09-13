@@ -1,0 +1,121 @@
+x-app-environment: &app-environment
+  ENVIRONMENT: development
+  CORS_ORIGINS: "[]"
+  AUDIT_HMAC_KEY: ${AUDIT_HMAC_KEY:?Set AUDIT_HMAC_KEY in .env.local-docker}
+  JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env.local-docker}
+  REFRESH_TOKEN_PEPPER: ${REFRESH_TOKEN_PEPPER:?Set REFRESH_TOKEN_PEPPER in .env.local-docker}
+  OTP_HMAC_KEY: ${OTP_HMAC_KEY:?Set OTP_HMAC_KEY in .env.local-docker}
+  MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Set MFA_ENCRYPTION_KEY in .env.local-docker}
+  REDIS_URL: redis://redis:6379/0
+  LOCAL_OTP_LOGGING: "true"
+
+services:
+  database:
+    image: postgis/postgis:16-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bovista
+      POSTGRES_USER: bovista_migrator
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}
+    volumes:
+      - bovista-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bovista_migrator -d bovista"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - bovista-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  migrate:
+    image: bovista-api:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://bovista_migrator:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}@database:5432/bovista
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}
+      WORKER_DATABASE_PASSWORD: ${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}
+    command: ["sh", "-c", "alembic upgrade head && python -m scripts.configure_database_roles"]
+    depends_on:
+      database:
+        condition: service_healthy
+
+  api:
+    image: bovista-api:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      DATABASE_URL: postgresql+asyncpg://bovista_runtime:${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}@database:5432/bovista
+      PORT: "10000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10000/health', timeout=3)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  worker:
+    image: bovista-api:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      DATABASE_URL: postgresql+asyncpg://bovista_worker:${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}@database:5432/bovista
+      WORKER_USER_ID: ${WORKER_USER_ID:-00000000-0000-0000-0000-000000000001}
+      EVENT_DELIVERY_URL: ${EVENT_DELIVERY_URL:-https://127.0.0.1:9443/events}
+      EVENT_DELIVERY_TOKEN: ${EVENT_DELIVERY_TOKEN:?Set EVENT_DELIVERY_TOKEN in .env.local-docker}
+    command: ["python", "-m", "scripts.start_worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    image: bovista-frontend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  bovista-postgres:
+  bovista-redis:
