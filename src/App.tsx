@@ -38,7 +38,7 @@ const Ctx = createContext<AppCtx>({
 export const useApp = () => useContext(Ctx);
 
 const auth = new AuthApi(api);
-const tokenKeys = { access: 'bovista.access_token', refresh: 'bovista.refresh_token', device: 'bovista.device_id' };
+const tokenKeys = { access: 'pashumitra.access_token', refresh: 'pashumitra.refresh_token', device: 'pashumitra.device_id' };
 
 function deviceId(): string {
   const saved = sessionStorage.getItem(tokenKeys.device);

@@ -36,7 +36,7 @@ function New-SecureBase64Value {
 }
 
 $lines = @(
-    "# Generated for Bovista local Docker deployment. Do not commit this file."
+    "# Generated for PashuMitra local Docker deployment. Do not commit this file."
     "POSTGRES_PASSWORD=$(New-SecureBase64Value -ByteCount 48)"
     "DATABASE_PASSWORD=$(New-SecureBase64Value -ByteCount 48)"
     "WORKER_DATABASE_PASSWORD=$(New-SecureBase64Value -ByteCount 48)"

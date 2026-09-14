@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     refresh_token_pepper: SecretStr
     otp_hmac_key: SecretStr
     mfa_encryption_key: SecretStr
-    jwt_issuer: str = "bovista"
-    jwt_audience: str = "bovista-api"
+    jwt_issuer: str = "pashumitra"
+    jwt_audience: str = "pashumitra-api"
     access_token_minutes: int = 10
     refresh_token_days: int = 30
     otp_ttl_seconds: int = 300
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     otp_delivery_url: str | None = None
     otp_delivery_token: SecretStr | None = None
     local_otp_logging: bool = False
-    mfa_issuer: str = "Bovista Government Livestock Health"
+    mfa_issuer: str = "PashuMitra Government Livestock Health"
     redis_url: SecretStr = SecretStr("redis://127.0.0.1:6379/0")
     outbreak_config_version: str = "outbreak-2026.1"
     outbreak_radius_km: int = 10

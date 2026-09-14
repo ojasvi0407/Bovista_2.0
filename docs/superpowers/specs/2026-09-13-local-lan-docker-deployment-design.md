@@ -2,7 +2,7 @@
 
 ## Objective
 
-Deploy Bovista on one Windows computer with Docker while making the web application available to phones and computers on the same trusted local network. The deployment must run the React frontend, FastAPI backend, PostgreSQL/PostGIS, Redis, migrations, and the durable outbox worker without Render or another cloud platform.
+Deploy PashuMitra on one Windows computer with Docker while making the web application available to phones and computers on the same trusted local network. The deployment must run the React frontend, FastAPI backend, PostgreSQL/PostGIS, Redis, migrations, and the durable outbox worker without Render or another cloud platform.
 
 ## Architecture
 

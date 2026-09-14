@@ -15,7 +15,7 @@ from app.services.auth import HttpOtpSender
 def _development_settings(*, local_otp_logging: bool) -> Settings:
     return Settings(
         environment="development",
-        database_url=SecretStr("postgresql+asyncpg://app:pw@db/bovista"),
+        database_url=SecretStr("postgresql+asyncpg://app:pw@db/pashumitra"),
         audit_hmac_key=SecretStr("audit-key"),
         jwt_signing_key=SecretStr("jwt-key"),
         refresh_token_pepper=SecretStr("refresh-pepper"),

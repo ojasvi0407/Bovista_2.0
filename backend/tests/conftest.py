@@ -10,8 +10,8 @@ from app.db.base import Base
 from app.models import decisions, geography, identity, reports, surveillance, trust  # noqa: F401
 
 TEST_DATABASE_URL = os.environ.get(
-    "BOVISTA_TEST_DATABASE_URL",
-    "postgresql+asyncpg://bovista_test:BovistaTest_2026%21ChangeMe@127.0.0.1:5432/bovista_test",
+    "PASHUMITRA_TEST_DATABASE_URL",
+    "postgresql+asyncpg://pashumitra_test:PashuMitraTest_2026%21ChangeMe@127.0.0.1:5432/pashumitra_test",
 )
 
 if not (make_url(TEST_DATABASE_URL).database or "").endswith("_test"):

@@ -21,10 +21,10 @@ def test_component_database_url_is_encoded_for_runtime_role() -> None:
     environment = {
         "DATABASE_HOST": "private-db",
         "DATABASE_PORT": "5432",
-        "DATABASE_NAME": "bovista",
-        "DATABASE_USER": "bovista_runtime",
+        "DATABASE_NAME": "pashumitra",
+        "DATABASE_USER": "pashumitra_runtime",
         "DATABASE_PASSWORD": "space and/slash",
     }
     assert ensure_database_url(environment) == (
-        "postgresql+asyncpg://bovista_runtime:space%20and%2Fslash" "@private-db:5432/bovista"
+        "postgresql+asyncpg://pashumitra_runtime:space%20and%2Fslash" "@private-db:5432/pashumitra"
     )

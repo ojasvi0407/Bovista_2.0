@@ -1,6 +1,6 @@
 # Backend core foundation implementation walkthrough
 
-This file preserves the implementation context for later Bovista work. The foundation now
+This file preserves the implementation context for later PashuMitra work. The foundation now
 includes the database, API, security, risk/triage, clinical, laboratory, alert,
 surveillance-dashboard, governance, and deployment architecture.
 
@@ -25,7 +25,7 @@ surveillance-dashboard, governance, and deployment architecture.
 1. Created the FastAPI shell, stable response envelopes, request IDs, CORS allowlisting,
    security headers, and safe production exception mapping.
 2. Installed and verified PostgreSQL 16 plus PostGIS 3.6 locally, then created an isolated
-   `bovista_test` database role with no superuser or RLS-bypass privilege.
+   `pashumitra_test` database role with no superuser or RLS-bypass privilege.
 3. Added UUIDv7-compatible identifiers, UTC timestamps, normalized domain tables,
    PostGIS geometry/indexes, Alembic migrations, HMAC-chained audit records,
    transactional outbox events, and idempotency receipts.

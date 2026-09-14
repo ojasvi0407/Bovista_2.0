@@ -17,15 +17,15 @@ jobs:
         image: postgis/postgis:16-3.5
         env:
           POSTGRES_PASSWORD: ci-postgres-password
-          POSTGRES_DB: bovista_test
+          POSTGRES_DB: pashumitra_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U postgres -d bovista_test"
+          --health-cmd "pg_isready -U postgres -d pashumitra_test"
           --health-interval 5s --health-timeout 5s --health-retries 20
     env:
-      DATABASE_URL: postgresql+asyncpg://bovista_runtime:ci-runtime-password-00000000000000@127.0.0.1:5432/bovista_test
-      BOVISTA_TEST_DATABASE_URL: postgresql+asyncpg://bovista_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/bovista_test
-      MIGRATION_DATABASE_URL: postgresql+asyncpg://bovista_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/bovista_test
+      DATABASE_URL: postgresql+asyncpg://pashumitra_runtime:ci-runtime-password-00000000000000@127.0.0.1:5432/pashumitra_test
+      PASHUMITRA_TEST_DATABASE_URL: postgresql+asyncpg://pashumitra_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/pashumitra_test
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://pashumitra_migrator:ci-migrator-password-000000000000@127.0.0.1:5432/pashumitra_test
       DATABASE_PASSWORD: ci-runtime-password-00000000000000
       WORKER_DATABASE_PASSWORD: ci-worker-password-000000000000000
       REQUIRE_NONOWNER_DATABASE_ROLE: "1"
@@ -46,9 +46,9 @@ jobs:
         env:
           PGPASSWORD: ci-postgres-password
         run: |
-          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS postgis"
-          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "CREATE ROLE bovista_migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'ci-migrator-password-000000000000'; CREATE ROLE bovista_runtime LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD 'ci-runtime-password-00000000000000'"
-          psql -h 127.0.0.1 -U postgres -d bovista_test -v ON_ERROR_STOP=1 -c "ALTER DATABASE bovista_test OWNER TO bovista_migrator; GRANT ALL ON SCHEMA public TO bovista_migrator"
+          psql -h 127.0.0.1 -U postgres -d pashumitra_test -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS postgis"
+          psql -h 127.0.0.1 -U postgres -d pashumitra_test -v ON_ERROR_STOP=1 -c "CREATE ROLE pashumitra_migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'ci-migrator-password-000000000000'; CREATE ROLE pashumitra_runtime LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD 'ci-runtime-password-00000000000000'"
+          psql -h 127.0.0.1 -U postgres -d pashumitra_test -v ON_ERROR_STOP=1 -c "ALTER DATABASE pashumitra_test OWNER TO pashumitra_migrator; GRANT ALL ON SCHEMA public TO pashumitra_migrator"
       - run: python -m pip install -r requirements-dev.txt
       - run: ruff check .
       - run: black --check .
@@ -59,16 +59,16 @@ jobs:
       - run: python -m scripts.verify_db_invariants
       - run: python -m scripts.verify_history
       - name: Build production container
-        run: docker build -t bovista-api:ci .
+        run: docker build -t pashumitra-api:ci .
       - name: Verify container startup and database health
         run: |
-          docker run -d --name bovista-smoke --network host -e DATABASE_URL -e ENVIRONMENT -e AUDIT_HMAC_KEY -e JWT_SIGNING_KEY -e REFRESH_TOKEN_PEPPER -e OTP_HMAC_KEY -e MFA_ENCRYPTION_KEY bovista-api:ci
+          docker run -d --name pashumitra-smoke --network host -e DATABASE_URL -e ENVIRONMENT -e AUDIT_HMAC_KEY -e JWT_SIGNING_KEY -e REFRESH_TOKEN_PEPPER -e OTP_HMAC_KEY -e MFA_ENCRYPTION_KEY pashumitra-api:ci
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:10000/health; then exit 0; fi
             sleep 2
           done
-          docker logs bovista-smoke
+          docker logs pashumitra-smoke
           exit 1
       - name: Stop smoke container
         if: always()
-        run: docker rm -f bovista-smoke || true
+        run: docker rm -f pashumitra-smoke || true

@@ -66,5 +66,5 @@ export class ApiClient {
 }
 
 export const api = new ApiClient(import.meta.env.VITE_API_BASE_URL ?? '/api/v1', () =>
-  sessionStorage.getItem('bovista.access_token'),
+  sessionStorage.getItem('pashumitra.access_token'),
 );

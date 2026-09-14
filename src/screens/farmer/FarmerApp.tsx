@@ -39,7 +39,7 @@ export default function FarmerApp() {
             <div className="text-xl">🐄</div>
             <div>
               <span className="font-display font-700 text-base">
-                {lang === 'en' ? 'PashuSwasthya' : lang === 'hi' ? 'पशुस्वास्थ्य' : 'પશુ​sv​as​thy​a'}
+                {lang === 'en' ? 'PashuMitra' : lang === 'hi' ? 'पशुमित्र' : 'પશુમિત્ર'}
               </span>
               <div className="text-green-200 text-xs">{farmer.name} · {farmer.village}</div>
             </div>

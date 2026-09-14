@@ -74,7 +74,7 @@ export default function RoleSelector({ onSelect }: { onSelect: (r: Role) => void
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            PashuSwasthya v2.0 &nbsp;·&nbsp; Smart India Hackathon 2026 &nbsp;·&nbsp; Problem ID: SIH1571
+            PashuMitra v2.0 &nbsp;·&nbsp; Smart India Hackathon 2026 &nbsp;·&nbsp; Problem ID: SIH1571
           </p>
         </div>
       </main>

@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN groupadd --system bovista && useradd --system --gid bovista --home-dir /app bovista
+RUN groupadd --system pashumitra && useradd --system --gid pashumitra --home-dir /app pashumitra
 
 COPY requirements.txt ./
 RUN python -m pip install --upgrade pip && python -m pip install -r requirements.txt
@@ -16,8 +16,8 @@ COPY alembic ./alembic
 COPY app ./app
 COPY scripts ./scripts
 
-RUN chown -R bovista:bovista /app
-USER bovista
+RUN chown -R pashumitra:pashumitra /app
+USER pashumitra
 
 EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

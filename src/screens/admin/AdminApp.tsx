@@ -28,7 +28,7 @@ export default function AdminApp() {
         <div className="flex items-center gap-3">
           <div className="text-xl">⚙️</div>
           <div>
-            <span className="font-display font-700 text-base">PashuSwasthya Admin</span>
+            <span className="font-display font-700 text-base">PashuMitra Admin</span>
             <span className="text-green-300 text-xs ml-2">System Administration</span>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function AdminApp() {
             ))}
           </nav>
           <div className="p-4 border-t border-[#d1d9d1] space-y-1 text-xs text-gray-400">
-            <p>PashuSwasthya v2.0.1</p>
+            <p>PashuMitra v2.0.1</p>
             <p>Build: SIH-2026-09-12</p>
             <p className="text-green-600 font-medium">● All services healthy</p>
           </div>
@@ -80,7 +80,7 @@ function AdminDashboard({ setScreen }: any) {
   return (
     <div className="space-y-6">
       <LiveWorkspaceStatus />
-      <SectionHeader title="System Dashboard" subtitle="PashuSwasthya · Gujarat State · 12 Sep 2026" />
+      <SectionHeader title="System Dashboard" subtitle="PashuMitra · Gujarat State · 12 Sep 2026" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Users" value={mockUsers.length} sub="all roles" />

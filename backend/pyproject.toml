@@ -1,5 +1,5 @@
 [project]
-name = "bovista-backend"
+name = "pashumitra-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 

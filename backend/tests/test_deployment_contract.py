@@ -9,7 +9,7 @@ def test_container_and_render_contract() -> None:
     dockerignore = (BACKEND_ROOT / ".dockerignore").read_text(encoding="utf-8")
     render = (REPOSITORY_ROOT / "render.yaml").read_text(encoding="utf-8")
 
-    assert "USER bovista" in dockerfile
+    assert "USER pashumitra" in dockerfile
     assert 'CMD ["python", "-m", "scripts.start"]' in dockerfile
     assert ".env" in dockerignore
     assert ".venv/" in dockerignore
@@ -22,8 +22,8 @@ def test_container_and_render_contract() -> None:
     assert "type: worker" in render
     assert "dockerCommand: python -m scripts.start_worker" in render
     assert "MIGRATION_DATABASE_URL" in render
-    assert "value: bovista_runtime" in render
-    assert "value: bovista_worker" in render
+    assert "value: pashumitra_runtime" in render
+    assert "value: pashumitra_worker" in render
 
 
 def test_local_compose_includes_postgis_and_redis() -> None:
@@ -32,7 +32,7 @@ def test_local_compose_includes_postgis_and_redis() -> None:
     assert "postgis/postgis:" in compose
     assert "redis:" in compose
     assert "healthcheck:" in compose
-    assert "BOVISTA_TEST_DATABASE_URL" in compose
+    assert "PASHUMITRA_TEST_DATABASE_URL" in compose
 
 
 def test_environment_example_documents_render_runtime_inputs() -> None:

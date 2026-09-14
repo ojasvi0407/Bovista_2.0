@@ -1,4 +1,4 @@
-# Bovista backend foundation
+# PashuMitra backend foundation
 
 This directory contains the government-operated livestock-health backend foundation for
 farmers, veterinarians, para-veterinarians, laboratory staff, district officers, and
@@ -136,8 +136,8 @@ and pending laboratory samples.
 
 ## Verification
 
-Tests use a real `bovista_test` PostgreSQL/PostGIS database configured through
-`BOVISTA_TEST_DATABASE_URL`. The test runner refuses any database whose name does not end
+Tests use a real `pashumitra_test` PostgreSQL/PostGIS database configured through
+`PASHUMITRA_TEST_DATABASE_URL`. The test runner refuses any database whose name does not end
 in `_test` because fixtures rebuild the schema.
 
 ```powershell
@@ -157,7 +157,7 @@ operational responsibilities.
 ## Local Docker deployment on Windows and a trusted LAN
 
 This deployment is for development on a trusted private network. It does not configure
-TLS or safely expose Bovista to the public internet. Install Docker Desktop with the WSL 2
+TLS or safely expose PashuMitra to the public internet. Install Docker Desktop with the WSL 2
 backend, start Docker Desktop, and run the following commands from the repository root.
 
 Generate the ignored local environment file. The command refuses to replace an existing
@@ -196,7 +196,7 @@ If another device cannot connect, run this once in an elevated PowerShell window
 only private-profile inbound TCP traffic on port 8080:
 
 ```powershell
-New-NetFirewallRule -DisplayName "Bovista LAN HTTP" -Direction Inbound `
+New-NetFirewallRule -DisplayName "PashuMitra LAN HTTP" -Direction Inbound `
   -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private
 ```
 
@@ -223,9 +223,9 @@ create a PostgreSQL custom-format backup from inside the private database contai
 ```powershell
 New-Item -ItemType Directory -Force .\backups | Out-Null
 docker compose --env-file .env.local-docker exec -T database `
-  pg_dump -U bovista_migrator -d bovista --format=custom --file=/tmp/bovista.dump
+  pg_dump -U pashumitra_migrator -d pashumitra --format=custom --file=/tmp/pashumitra.dump
 docker compose --env-file .env.local-docker cp `
-  database:/tmp/bovista.dump .\backups\bovista.dump
+  database:/tmp/pashumitra.dump .\backups\pashumitra.dump
 ```
 
 ## Docker and Render
@@ -233,13 +233,13 @@ docker compose --env-file .env.local-docker cp `
 Build and run the production image locally:
 
 ```powershell
-docker build -t bovista-api .
-docker run --rm -p 10000:10000 --env-file .env -e ENVIRONMENT=production bovista-api
+docker build -t pashumitra-api .
+docker run --rm -p 10000:10000 --env-file .env -e ENVIRONMENT=production pashumitra-api
 ```
 
 For a local PostGIS/Redis/API stack, copy `.env.example` to `.env`, replace the local
-secrets, then run `docker compose up --build`. Compose creates separate `bovista` and
-`bovista_test` databases and persistent named volumes. Apply migrations with
+secrets, then run `docker compose up --build`. Compose creates separate `pashumitra` and
+`pashumitra_test` databases and persistent named volumes. Apply migrations with
 `docker compose run --rm api alembic upgrade head` before first use.
 
 The image runs as a non-root user, listens on Render's `PORT`, and includes a `/health`

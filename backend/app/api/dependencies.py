@@ -17,7 +17,7 @@ bearer_scheme = HTTPBearer(
     auto_error=False,
     scheme_name="bearerAuth",
     bearerFormat="JWT",
-    description="Short-lived Bovista access token.",
+    description="Short-lived PashuMitra access token.",
 )
 
 

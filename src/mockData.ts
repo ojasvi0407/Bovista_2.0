@@ -131,7 +131,7 @@ export const mockUsers: User[] = [
   { id: 'u3', name: 'Dr. Anjali Sharma', role: 'vet', district: 'Ahmedabad', phone: '+91-96543-21098', email: 'anjali.s@ahvd.gov.in', status: 'active', lastLogin: '2026-09-12T08:00:00Z', createdAt: '2024-11-05T00:00:00Z' },
   { id: 'u4', name: 'Priya Mehta', role: 'lab', district: 'Gandhinagar', phone: '+91-94532-10987', email: 'priya.m@gbrc.gov.in', status: 'active', lastLogin: '2026-09-12T09:00:00Z', createdAt: '2025-02-20T00:00:00Z' },
   { id: 'u5', name: 'IAS Mihir Bhatt', role: 'government', district: 'Gandhinagar', phone: '+91-93210-98765', email: 'mihir.b@ahvd.gov.in', status: 'active', lastLogin: '2026-09-11T18:00:00Z', createdAt: '2024-08-01T00:00:00Z' },
-  { id: 'u6', name: 'Admin Kadam', role: 'admin', district: 'Gandhinagar', phone: '+91-92109-87654', email: 'admin@pashuswasthya.gov.in', status: 'active', lastLogin: '2026-09-12T08:30:00Z', createdAt: '2024-06-01T00:00:00Z' },
+  { id: 'u6', name: 'Admin Kadam', role: 'admin', district: 'Gandhinagar', phone: '+91-92109-87654', email: 'admin@pashumitra.gov.in', status: 'active', lastLogin: '2026-09-12T08:30:00Z', createdAt: '2024-06-01T00:00:00Z' },
 ];
 
 export const mockAuditLogs: AuditLog[] = [
@@ -162,7 +162,7 @@ export const vaccinationCoverageData = [
 
 export const TRANSLATIONS: Record<string, Record<string, string>> = {
   en: {
-    appName: 'PashuSwasthya', appSubtitle: 'Livestock Health Surveillance',
+    appName: 'PashuMitra', appSubtitle: 'Livestock Health Surveillance',
     dashboard: 'Dashboard', animals: 'Animals', reportDisease: 'Report Disease',
     alerts: 'Alerts', vaccinations: 'Vaccinations', treatments: 'Treatments',
     fieldReports: 'Field Reports', sampleCollection: 'Sample Collection',

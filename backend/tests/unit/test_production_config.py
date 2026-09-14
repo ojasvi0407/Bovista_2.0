@@ -7,14 +7,14 @@ from app.core.config import Settings
 def _settings(**overrides):
     values = {
         "environment": "production",
-        "database_url": SecretStr("postgresql+asyncpg://app:pw@db/bovista"),
+        "database_url": SecretStr("postgresql+asyncpg://app:pw@db/pashumitra"),
         "audit_hmac_key": SecretStr("audit-key-that-is-at-least-32-bytes-long"),
         "jwt_signing_key": SecretStr("jwt-key-that-is-at-least-32-bytes-long-x"),
         "refresh_token_pepper": SecretStr("refresh-pepper-at-least-32-bytes-long"),
         "otp_hmac_key": SecretStr("otp-hmac-key-at-least-32-bytes-long-x"),
         "mfa_encryption_key": SecretStr("MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="),
-        "cors_origins": ["https://bovista.gov.in"],
-        "redis_url": SecretStr("rediss://bovista-redis.internal:6379/0"),
+        "cors_origins": ["https://pashumitra.gov.in"],
+        "redis_url": SecretStr("rediss://pashumitra-redis.internal:6379/0"),
         "otp_delivery_url": "https://sms.gov.in/v1/otp",
         "otp_delivery_token": SecretStr("sms-gateway-token-at-least-32-bytes-long"),
     }
@@ -50,12 +50,12 @@ def test_production_rejects_local_redis() -> None:
 
 def test_production_rejects_non_postgres_database() -> None:
     with pytest.raises(ValidationError):
-        _settings(database_url=SecretStr("sqlite+aiosqlite:///bovista.db"))
+        _settings(database_url=SecretStr("sqlite+aiosqlite:///pashumitra.db"))
 
 
 def test_production_rejects_non_https_cors_origin() -> None:
     with pytest.raises(ValidationError):
-        _settings(cors_origins=["http://bovista.gov.in"])
+        _settings(cors_origins=["http://pashumitra.gov.in"])
 
 
 def test_unknown_environment_name_is_rejected() -> None:
@@ -75,6 +75,6 @@ def test_non_development_rejects_local_otp_logging(environment: str) -> None:
 
 
 def test_render_postgres_url_is_normalized_for_asyncpg() -> None:
-    settings = _settings(database_url=SecretStr("postgres://app:pw@db/bovista"))
+    settings = _settings(database_url=SecretStr("postgres://app:pw@db/pashumitra"))
 
     assert settings.database_url.get_secret_value().startswith("postgresql+asyncpg://")

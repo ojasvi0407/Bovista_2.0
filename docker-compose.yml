@@ -1,3 +1,5 @@
+name: pashumitra
+
 x-app-environment: &app-environment
   ENVIRONMENT: development
   CORS_ORIGINS: "[]"
@@ -14,13 +16,13 @@ services:
     image: postgis/postgis:16-3.5
     restart: unless-stopped
     environment:
-      POSTGRES_DB: bovista
-      POSTGRES_USER: bovista_migrator
+      POSTGRES_DB: pashumitra
+      POSTGRES_USER: pashumitra_migrator
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}
     volumes:
-      - bovista-postgres:/var/lib/postgresql/data
+      - pashumitra-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U bovista_migrator -d bovista"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U pashumitra_migrator -d pashumitra"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -31,7 +33,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - bovista-redis:/data
+      - pashumitra-redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -40,13 +42,13 @@ services:
       start_period: 5s
 
   migrate:
-    image: bovista-api:local
+    image: pashumitra-api:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
       ENVIRONMENT: development
-      MIGRATION_DATABASE_URL: postgresql+asyncpg://bovista_migrator:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}@database:5432/bovista
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://pashumitra_migrator:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local-docker}@database:5432/pashumitra
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}
       WORKER_DATABASE_PASSWORD: ${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}
       WORKER_USER_ID: ${WORKER_USER_ID:-00000000-0000-0000-0000-000000000001}
@@ -61,14 +63,14 @@ services:
         condition: service_healthy
 
   api:
-    image: bovista-api:local
+    image: pashumitra-api:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       <<: *app-environment
-      DATABASE_URL: postgresql+asyncpg://bovista_runtime:${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}@database:5432/bovista
+      DATABASE_URL: postgresql+asyncpg://pashumitra_runtime:${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.local-docker}@database:5432/pashumitra
       PORT: "10000"
     depends_on:
       migrate:
@@ -91,14 +93,14 @@ services:
       start_period: 20s
 
   worker:
-    image: bovista-api:local
+    image: pashumitra-api:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       <<: *app-environment
-      DATABASE_URL: postgresql+asyncpg://bovista_worker:${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}@database:5432/bovista
+      DATABASE_URL: postgresql+asyncpg://pashumitra_worker:${WORKER_DATABASE_PASSWORD:?Set WORKER_DATABASE_PASSWORD in .env.local-docker}@database:5432/pashumitra
       WORKER_USER_ID: ${WORKER_USER_ID:-00000000-0000-0000-0000-000000000001}
       EVENT_DELIVERY_URL: ${EVENT_DELIVERY_URL:-https://127.0.0.1:9443/events}
       EVENT_DELIVERY_TOKEN: ${EVENT_DELIVERY_TOKEN:?Set EVENT_DELIVERY_TOKEN in .env.local-docker}
@@ -124,7 +126,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: bovista-frontend:local
+    image: pashumitra-frontend:local
     build:
       context: .
       dockerfile: Dockerfile.frontend
@@ -136,5 +138,5 @@ services:
         condition: service_healthy
 
 volumes:
-  bovista-postgres:
-  bovista-redis:
+  pashumitra-postgres:
+  pashumitra-redis:

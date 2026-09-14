@@ -8,14 +8,14 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from scripts.database_url import normalize_postgres_url
 
-ROLES = ("bovista_runtime", "bovista_worker")
+ROLES = ("pashumitra_runtime", "pashumitra_worker")
 
 
 async def configure() -> None:
     migration_url = os.environ.get("MIGRATION_DATABASE_URL", "")
     passwords = {
-        "bovista_runtime": os.environ.get("DATABASE_PASSWORD", ""),
-        "bovista_worker": os.environ.get("WORKER_DATABASE_PASSWORD", ""),
+        "pashumitra_runtime": os.environ.get("DATABASE_PASSWORD", ""),
+        "pashumitra_worker": os.environ.get("WORKER_DATABASE_PASSWORD", ""),
     }
     if not migration_url:
         raise RuntimeError("MIGRATION_DATABASE_URL is required.")
@@ -44,37 +44,37 @@ async def configure() -> None:
             database_grants = await connection.scalar(
                 text(
                     "SELECT format('GRANT CONNECT ON DATABASE %I TO "
-                    "bovista_runtime, bovista_worker', current_database())"
+                    "pashumitra_runtime, pashumitra_worker', current_database())"
                 )
             )
             await connection.execute(text(database_grants))
             await connection.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await connection.execute(
-                text("GRANT USAGE ON SCHEMA public TO bovista_runtime, bovista_worker")
+                text("GRANT USAGE ON SCHEMA public TO pashumitra_runtime, pashumitra_worker")
             )
             await connection.execute(
                 text(
                     "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public "
-                    "TO bovista_runtime, bovista_worker"
+                    "TO pashumitra_runtime, pashumitra_worker"
                 )
             )
             await connection.execute(
                 text(
                     "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public "
-                    "TO bovista_runtime, bovista_worker"
+                    "TO pashumitra_runtime, pashumitra_worker"
                 )
             )
             await connection.execute(
                 text(
                     "ALTER DEFAULT PRIVILEGES IN SCHEMA public "
                     "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES "
-                    "TO bovista_runtime, bovista_worker"
+                    "TO pashumitra_runtime, pashumitra_worker"
                 )
             )
             await connection.execute(
                 text(
                     "ALTER DEFAULT PRIVILEGES IN SCHEMA public "
-                    "GRANT USAGE, SELECT ON SEQUENCES TO bovista_runtime, bovista_worker"
+                    "GRANT USAGE, SELECT ON SEQUENCES TO pashumitra_runtime, pashumitra_worker"
                 )
             )
     finally:

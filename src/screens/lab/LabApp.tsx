@@ -27,7 +27,7 @@ export default function LabApp() {
         <div className="flex items-center gap-3">
           <div className="text-xl">🧪</div>
           <div>
-            <span className="font-display font-700 text-base">PashuSwasthya</span>
+            <span className="font-display font-700 text-base">PashuMitra</span>
             <span className="text-green-300 text-xs ml-2">Laboratory Portal</span>
           </div>
         </div>

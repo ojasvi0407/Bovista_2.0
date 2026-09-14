@@ -35,7 +35,7 @@ export default function VetApp() {
           <button onClick={() => setSidebarOpen(o => !o)} className="lg:hidden text-white p-1">☰</button>
           <div className="text-xl">🐄</div>
           <div>
-            <span className="font-display font-700 text-base">PashuSwasthya</span>
+            <span className="font-display font-700 text-base">PashuMitra</span>
             <span className="text-green-300 text-xs ml-2">Veterinarian Portal</span>
           </div>
         </div>

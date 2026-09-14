@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: bovista-api
+    name: pashumitra-api
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -12,22 +12,22 @@ services:
         value: production
       - key: MIGRATION_DATABASE_URL
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: connectionString
       - key: DATABASE_HOST
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: host
       - key: DATABASE_PORT
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: port
       - key: DATABASE_NAME
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: database
       - key: DATABASE_USER
-        value: bovista_runtime
+        value: pashumitra_runtime
       - key: DATABASE_PASSWORD
         sync: false
       - key: WORKER_DATABASE_PASSWORD
@@ -51,7 +51,7 @@ services:
       - key: MFA_ENCRYPTION_KEY
         sync: false
   - type: worker
-    name: bovista-worker
+    name: pashumitra-worker
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -62,66 +62,66 @@ services:
         value: production
       - key: DATABASE_HOST
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: host
       - key: DATABASE_PORT
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: port
       - key: DATABASE_NAME
         fromDatabase:
-          name: bovista-postgres
+          name: pashumitra-postgres
           property: database
       - key: DATABASE_USER
-        value: bovista_worker
+        value: pashumitra_worker
       - key: DATABASE_PASSWORD
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: WORKER_DATABASE_PASSWORD
       - key: CORS_ORIGINS
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: CORS_ORIGINS
       - key: REDIS_URL
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: REDIS_URL
       - key: AUDIT_HMAC_KEY
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: AUDIT_HMAC_KEY
       - key: JWT_SIGNING_KEY
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: JWT_SIGNING_KEY
       - key: REFRESH_TOKEN_PEPPER
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: REFRESH_TOKEN_PEPPER
       - key: OTP_HMAC_KEY
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: OTP_HMAC_KEY
       - key: OTP_DELIVERY_URL
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: OTP_DELIVERY_URL
       - key: OTP_DELIVERY_TOKEN
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: OTP_DELIVERY_TOKEN
       - key: MFA_ENCRYPTION_KEY
         fromService:
-          name: bovista-api
+          name: pashumitra-api
           type: web
           envVarKey: MFA_ENCRYPTION_KEY
       - key: WORKER_USER_ID
@@ -132,8 +132,8 @@ services:
         sync: false
 
 databases:
-  - name: bovista-postgres
-    databaseName: bovista
-    user: bovista_app
+  - name: pashumitra-postgres
+    databaseName: pashumitra
+    user: pashumitra_app
     postgresMajorVersion: "16"
     ipAllowList: []

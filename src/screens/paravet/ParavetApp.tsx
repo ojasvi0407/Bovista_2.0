@@ -28,7 +28,7 @@ export default function ParavetApp() {
       <header className="bg-[#166534] text-white px-4 py-3 sticky top-0 z-40">
         <div className="flex items-center justify-between">
           <div>
-            <span className="font-display font-700 text-base">PashuSwasthya</span>
+            <span className="font-display font-700 text-base">PashuMitra</span>
             <div className="text-green-200 text-xs">Mohan Desai · Para-vet · Daskroi</div>
           </div>
           <div className="flex items-center gap-2">

@@ -46,7 +46,7 @@ export default function LoginGate({ busy, onFarmerOtp, onStaffLogin }: Props) {
       <section className="w-full max-w-md rounded-2xl border border-[#d1d9d1] bg-white p-6 shadow-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 grid size-12 place-items-center rounded-xl bg-[#166534] text-2xl">🐄</div>
-          <h1 className="font-display text-2xl font-bold text-gray-900">PashuSwasthya</h1>
+          <h1 className="font-display text-2xl font-bold text-gray-900">PashuMitra</h1>
           <p className="mt-1 text-sm text-gray-500">Government livestock health system</p>
         </div>
 

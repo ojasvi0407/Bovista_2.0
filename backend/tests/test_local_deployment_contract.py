@@ -84,7 +84,7 @@ def test_root_compose_exposes_only_frontend_and_orders_startup() -> None:
         services["worker"]["environment"]["WORKER_USER_ID"]
     )
     assert services["frontend"]["depends_on"]["api"]["condition"] == "service_healthy"
-    assert set(compose["volumes"]) == {"bovista-postgres", "bovista-redis"}
+    assert set(compose["volumes"]) == {"pashumitra-postgres", "pashumitra-redis"}
 
 
 def test_initializer_generates_distinct_secrets_and_fernet_key(tmp_path: Path) -> None:
